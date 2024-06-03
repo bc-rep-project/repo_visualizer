@@ -78,13 +78,10 @@ export const Tree = (
     const flatTree = colorEncoding === "last-change"
       ? items.map(lastCommitAccessor).sort((a, b) => b - a).slice(0, -8)
       : items.map(numberOfCommitsAccessor).sort((a, b) => b - a).slice(2, -2);
-    const colorExtent = extent(flatTree);
+  
+    // Ensure colorExtent[0] and colorExtent[1] are numbers
+    const [minVal, maxVal] = colorExtent as [number, number];
 
-    // const valueScale = scaleLog()
-    //   .domain(colorExtent)
-    //   .range([0, 1])
-    //   .clamp(true);
-    // const colorScale = scaleSequential((d) => interpolateBuPu(valueScale(d)));
     const colors = [
       "#f4f4f4",
       "#f4f4f4",
@@ -94,27 +91,27 @@ export const Tree = (
       // @ts-ignore
       colorEncoding === "number-of-changes" ? "#3C40C6" : "#823471",
     ];
-
-    const name = item?.data?.name;
-    
-    const colorScale = scaleLinear()
-      .domain(
-        range(0, colors.length).map((i) => (
-          +colorExtent[0] +
-          (colorExtent[1] - colorExtent[0]) * i / (colors.length - 1)
-        )),
-      )
-      .range(colors).clamp(true);
-    return { colorScale, colorExtent };
+    if (Array.isArray(colorExtent) && colorExtent.length === 2) {
+      const colorScale2 = scaleLinear()
+        .domain(
+          range(0, colors.length).map((i) => { // No need to cast i since it's already a number
+            return +colorExtent[0] + (colorExtent[1] - colorExtent[0]) * i / (colors.length - 1); 
+          })
+        )
+        .range(colors).clamp(true);
+      return { colorScale: colorScale2, colorExtent };
+    } else {
+      return { colorScale: () => { }, colorExtent: [0, 0] }; // Return defaults if colorExtent is invalid
+    }
   }, [data]);
 
   const getColor = (d) => {
     if (colorEncoding === "type") {
-      const isParent = d.children;
+      const isParent = !!d.children;
       if (isParent) {
         const extensions = countBy(d.children, (c) => c.extension);
         const mainExtension = maxBy(entries(extensions), ([k, v]) => v)?.[0];
-        return fileColors[mainExtension] || "#CED6E0";
+        return mainExtension ? fileColors[mainExtension] : "#CED6E0"; // Check if mainExtension exists
       }
       return fileColors[d.extension] || "#CED6E0";
     } else if (colorEncoding === "number-of-changes") {
@@ -128,18 +125,12 @@ export const Tree = (
     if (!data) return [];
     const hierarchicalData = hierarchy(
       processChild(data, getColor, cachedOrders.current, 0, fileColors),
-    ).sum((d) => d.value)
+    ).sum((d) => d.value ?? 0) 
       .sort((a, b) => {
         if (b.data.path.startsWith("src/fonts")) {
-          //   a.data.sortOrder,
-          //   b.data.sortOrder,
-          //   (b.data.sortOrder - a.data.sortOrder) ||
-          //     (b.data.name > a.data.name ? 1 : -1),
-          //   a,
-          //   b,
-          // );
+          // ...
         }
-        return (b.data.sortOrder - a.data.sortOrder) ||
+        return (b.data.sortOrder ?? 0) - (a.data.sortOrder ?? 0) || //  Default to 0 if undefined
           (b.data.name > a.data.name ? 1 : -1);
       });
 
