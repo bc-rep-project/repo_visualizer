@@ -94,6 +94,9 @@ export const Tree = (
       // @ts-ignore
       colorEncoding === "number-of-changes" ? "#3C40C6" : "#823471",
     ];
+
+    const name = item?.data?.name;
+    
     const colorScale = scaleLinear()
       .domain(
         range(0, colors.length).map((i) => (
