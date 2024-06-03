@@ -1,5 +1,5 @@
 {
-  "name": "my-repo-visualizer",
+  "name": "repo_visualizer",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
