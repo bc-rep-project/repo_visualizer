@@ -98,7 +98,7 @@ export const Tree = (
             return +colorExtent[0] + (colorExtent[1] - colorExtent[0]) * i / (colors.length - 1); 
           })
         )
-        .range(colors).clamp(true);
+        .range(colors.map(Number)).clamp(true);
       return { colorScale: colorScale2, colorExtent };
     } else {
       return { colorScale: () => { }, colorExtent: [0, 0] }; // Return defaults if colorExtent is invalid
@@ -138,17 +138,15 @@ export const Tree = (
       .size([width, height * 1.3]) // we'll reflow the tree to be more horizontal, but we want larger bubbles (.pack() sizes the bubbles to fit the space)
       .padding((d) => {
         if (d.depth <= 0) return 0;
-        const hasChildWithNoChildren = d.children.filter((d) =>
-          !d.children?.length
-        ).length > 1;
+        const hasChildWithNoChildren = d.children ? d.children.filter((d) => !d.children?.length).length > 1 : false;
         if (hasChildWithNoChildren) return 5;
         return 13;
         // const hasChildren = !!d.children?.find((d) => d?.children?.length);
         // return hasChildren ? 60 : 8;
         // return [60, 20, 12][d.depth] || 5;
       })(hierarchicalData);
-    packedTree.children = reflowSiblings(
-      packedTree.children,
+      packedTree.children = reflowSiblings(
+        (packedTree.children as unknown) as ProcessedDataItem[],
       cachedPositions.current,
       maxDepth,
     );
