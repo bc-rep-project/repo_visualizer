@@ -144,12 +144,13 @@ export const Tree = (
         // const hasChildren = !!d.children?.find((d) => d?.children?.length);
         // return hasChildren ? 60 : 8;
         // return [60, 20, 12][d.depth] || 5;
-      })(hierarchicalData);
+      })((hierarchicalData as unknown) as HierarchyNode<unknown>); 
+
       packedTree.children = reflowSiblings(
-        (packedTree.children as unknown) as ProcessedDataItem[],
-      cachedPositions.current,
-      maxDepth,
-    );
+        (packedTree.children as unknown) as ProcessedDataItem[], 
+        cachedPositions.current,
+        maxDepth,
+      );
     const children = packedTree.descendants() as ProcessedDataItem[];
 
     cachedOrders.current = {};
