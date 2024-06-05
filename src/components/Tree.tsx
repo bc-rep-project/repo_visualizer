@@ -5,13 +5,14 @@ import {
   forceSimulation,
   forceX,
   forceY,
-  hierarchy,
-  pack,
-  HierarchyNode,
+  // hierarchy,
+  // pack,
+  // HierarchyNode,
   scaleLinear,
   scaleSqrt,
   timeFormat,
 } from "d3";
+import { hierarchy, pack, HierarchyNode, HierarchyCircularNode } from 'd3-hierarchy';
 import { FileType } from "./types";
 import countBy from "lodash/countBy";
 import maxBy from "lodash/maxBy";
@@ -121,22 +122,33 @@ export const Tree = (
     }
   };
 
+
+  
   const packedData = useMemo(() => {
     if (!data) return [];
+    
+    
     const hierarchicalData = hierarchy(
       processChild(data, getColor, cachedOrders.current, 0, fileColors),
-    ).sum((d) => d.value ?? 0)  as HierarchyNode<ExtendedFileType>; 
+    ).sum((d) => {
+      if (d) {
+        return d.value ?? 0;
+      } else {
+        console.error('Error: d is undefined');
+        return 0;
+      }
+    }) as HierarchyNode<ExtendedFileType>;
 
     let packedTree = pack()
-      .size([width, height * 1.3]) 
-      .padding((d: HierarchyNode<ExtendedFileType>) => { 
-        if (d.depth <= 0) return 0;
-        const hasChildWithNoChildren = d.children
-          ? d.children.filter((d) => !d.children?.length).length > 1
-          : false;
-        if (hasChildWithNoChildren) return 5;
-        return 13;
-      })(hierarchicalData); 
+    .size([width, height * 1.3])
+    .padding((d: HierarchyCircularNode<unknown>) => {
+      if (d.depth <= 6) return 6;
+      const hasChildWithNoChildren = d.children
+        ? d.children.filter((g: any) => !g.children?.length).length > 1
+        : false;
+      if (hasChildWithNoChildren) return 5;
+      return 13;
+    })(hierarchicalData);
 
     // Apply direct type assertion 
     packedTree.children = reflowSiblings(
@@ -163,11 +175,11 @@ export const Tree = (
   }, [data, fileColors, colorEncoding]);
 
   const selectedNode = selectedNodeId &&
-    packedData.find((d) => d.data.path === selectedNodeId);
+  packedData.find((d) => d && d.data.path === selectedNodeId);
 
-  const fileTypes = uniqBy(
-    packedData.map((d) => fileColors[d.data.extension] && d.data.extension),
-  ).sort().filter(Boolean);
+    const fileTypes = uniqBy(
+      packedData.map((d) => d && fileColors[d.data.extension] && d.data.extension),
+    ).sort().filter(Boolean);
 
 
   return (
