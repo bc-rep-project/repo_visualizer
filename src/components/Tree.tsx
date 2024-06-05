@@ -7,7 +7,7 @@ import {
   forceY,
   hierarchy,
   pack,
-  range,
+  HierarchyNode,
   scaleLinear,
   scaleSqrt,
   timeFormat,
@@ -71,38 +71,37 @@ export const Tree = (
   const { colorScale, colorExtent } = useMemo(() => {
     if (!data) return { colorScale: () => { }, colorExtent: [0, 0] };
     const flattenTree = (d) => {
-      return d.children ? flatten(d.children.map(flattenTree)) : d;
+      return d.children ? d.children.flatMap(flattenTree) : d;
     };
     const items = flattenTree(data);
-    // @ts-ignore
     const flatTree = colorEncoding === "last-change"
       ? items.map(lastCommitAccessor).sort((a, b) => b - a).slice(0, -8)
       : items.map(numberOfCommitsAccessor).sort((a, b) => b - a).slice(2, -2);
-
-    const colorExtent = extent(flatTree);
-
+  
+    const colorExtent = extent(flatTree).map(Number);
+  
     const colors = [
       "#f4f4f4",
       "#f4f4f4",
       "#f4f4f4",
-      // @ts-ignore
       colorEncoding === "last-change" ? "#C7ECEE" : "#FEEAA7",
-      // @ts-ignore
       colorEncoding === "number-of-changes" ? "#3C40C6" : "#823471",
     ];
-
-    if (Array.isArray(colorExtent) && colorExtent.length === 2) {
+  
+    if (Array.isArray(colorExtent) && colorExtent.length === 2 && !isNaN(colorExtent[0]) && !isNaN(colorExtent[1])) {
       const colorScale2 = scaleLinear()
-        .domain(
-          range(0, colors.length).map((i) => {
-            return +colorExtent[0] + (colorExtent[1] - colorExtent[0]) * i / (colors.length - 1);
-          })
-        )
-        .range(colors) // Removed .map(Number) 
+        .domain(colorExtent)
+        .range([0, colors.length - 1])
         .clamp(true);
-      return { colorScale: colorScale2, colorExtent };
+  
+      const getColor = (value) => {
+        const colorIndex = Math.round(colorScale2(value));
+        return colors[colorIndex];
+      };
+  
+      return { colorScale: getColor, colorExtent };
     } else {
-      return { colorScale: () => { }, colorExtent: [0, 0] }; 
+      return { colorScale: () => { }, colorExtent: [0, 0] };
     }
   }, [data, colorEncoding]);
 
