@@ -78,9 +78,8 @@ export const Tree = (
     const flatTree = colorEncoding === "last-change"
       ? items.map(lastCommitAccessor).sort((a, b) => b - a).slice(0, -8)
       : items.map(numberOfCommitsAccessor).sort((a, b) => b - a).slice(2, -2);
-  
-    // Ensure colorExtent[0] and colorExtent[1] are numbers
-    const [minVal, maxVal] = colorExtent as [number, number];
+
+    const colorExtent = extent(flatTree);
 
     const colors = [
       "#f4f4f4",
@@ -91,19 +90,21 @@ export const Tree = (
       // @ts-ignore
       colorEncoding === "number-of-changes" ? "#3C40C6" : "#823471",
     ];
+
     if (Array.isArray(colorExtent) && colorExtent.length === 2) {
       const colorScale2 = scaleLinear()
         .domain(
-          range(0, colors.length).map((i) => { // No need to cast i since it's already a number
-            return +colorExtent[0] + (colorExtent[1] - colorExtent[0]) * i / (colors.length - 1); 
+          range(0, colors.length).map((i) => {
+            return +colorExtent[0] + (colorExtent[1] - colorExtent[0]) * i / (colors.length - 1);
           })
         )
-        .range(colors.map(Number)).clamp(true);
+        .range(colors) // Removed .map(Number) 
+        .clamp(true);
       return { colorScale: colorScale2, colorExtent };
     } else {
-      return { colorScale: () => { }, colorExtent: [0, 0] }; // Return defaults if colorExtent is invalid
+      return { colorScale: () => { }, colorExtent: [0, 0] }; 
     }
-  }, [data]);
+  }, [data, colorEncoding]);
 
   const getColor = (d) => {
     if (colorEncoding === "type") {
@@ -111,7 +112,7 @@ export const Tree = (
       if (isParent) {
         const extensions = countBy(d.children, (c) => c.extension);
         const mainExtension = maxBy(entries(extensions), ([k, v]) => v)?.[0];
-        return mainExtension ? fileColors[mainExtension] : "#CED6E0"; // Check if mainExtension exists
+        return mainExtension && fileColors[mainExtension] ? fileColors[mainExtension] : "#CED6E0";
       }
       return fileColors[d.extension] || "#CED6E0";
     } else if (colorEncoding === "number-of-changes") {
@@ -125,32 +126,25 @@ export const Tree = (
     if (!data) return [];
     const hierarchicalData = hierarchy(
       processChild(data, getColor, cachedOrders.current, 0, fileColors),
-    ).sum((d) => d.value ?? 0) 
-      .sort((a, b) => {
-        if (b.data.path.startsWith("src/fonts")) {
-          // ...
-        }
-        return (b.data.sortOrder ?? 0) - (a.data.sortOrder ?? 0) || //  Default to 0 if undefined
-          (b.data.name > a.data.name ? 1 : -1);
-      });
+    ).sum((d) => d.value ?? 0)  as HierarchyNode<ExtendedFileType>; 
 
     let packedTree = pack()
-      .size([width, height * 1.3]) // we'll reflow the tree to be more horizontal, but we want larger bubbles (.pack() sizes the bubbles to fit the space)
-      .padding((d) => {
+      .size([width, height * 1.3]) 
+      .padding((d: HierarchyNode<ExtendedFileType>) => { 
         if (d.depth <= 0) return 0;
-        const hasChildWithNoChildren = d.children ? d.children.filter((d) => !d.children?.length).length > 1 : false;
+        const hasChildWithNoChildren = d.children
+          ? d.children.filter((d) => !d.children?.length).length > 1
+          : false;
         if (hasChildWithNoChildren) return 5;
         return 13;
-        // const hasChildren = !!d.children?.find((d) => d?.children?.length);
-        // return hasChildren ? 60 : 8;
-        // return [60, 20, 12][d.depth] || 5;
-      })((hierarchicalData as unknown) as HierarchyNode<unknown>); 
+      })(hierarchicalData); 
 
-      packedTree.children = reflowSiblings(
-        (packedTree.children as unknown) as ProcessedDataItem[], 
-        cachedPositions.current,
-        maxDepth,
-      );
+    // Apply direct type assertion 
+    packedTree.children = reflowSiblings(
+      packedTree.children as ProcessedDataItem[], 
+      cachedPositions.current,
+      maxDepth,
+    );
     const children = packedTree.descendants() as ProcessedDataItem[];
 
     cachedOrders.current = {};
@@ -167,7 +161,7 @@ export const Tree = (
     });
 
     return children.slice(0, maxChildren);
-  }, [data, fileColors]);
+  }, [data, fileColors, colorEncoding]);
 
   const selectedNode = selectedNodeId &&
     packedData.find((d) => d.data.path === selectedNodeId);
@@ -461,70 +455,82 @@ const Legend = ({ fileTypes = [], fileColors}) => {
 };
 
 const processChild = (
-  child: FileType,
-  getColor,
-  cachedOrders,
+  child: FileType | undefined,
+  getColor: (d: ExtendedFileType) => string,
+  cachedOrders: { [key: string]: number },
   i = 0,
-  fileColors
-): ExtendedFileType => {
-  if (!child) return;
-  const isRoot = !child.path;
-  let name = child.name;
-  let path = child.path;
-  let children = child?.children?.map((c, i) =>
-    processChild(c, getColor, cachedOrders, i, fileColors)
-  );
-  if (children?.length === 1) {
-    name = `${name}/${children[0].name}`;
-    path = children[0].path;
-    children = children[0].children;
+  fileColors: { [key: string]: string },
+): ExtendedFileType | undefined => {
+  if (!child) return undefined;
+
+  try {
+    const isRoot = !child.path;
+
+    // Calculate new name and path based on children (if applicable)
+    const hasSingleChild = child.children && child.children.length === 1;
+    const newName = hasSingleChild 
+        ? `${child.name}/${child.children[0].name}` 
+        : child.name;
+    const newPath = hasSingleChild
+        ? child.children[0].path
+        : child.path;
+
+    // Process children recursively (filtering out undefined results)
+    const newChildren: ExtendedFileType[] = child.children
+      ? child.children
+          .map((c, i) => processChild(c, getColor, cachedOrders, i, fileColors))
+          .filter((c): c is ExtendedFileType => !!c)
+      : [];
+
+    const pathWithoutExtension = newPath ? newPath.split(".").slice(0, -1).join(".") : undefined;
+    const extension = newName ? newName.split(".").slice(-1)[0] : undefined;
+    const hasExtension = extension ? !!fileColors[extension] : false;
+
+    // Add loose files at the root level
+    const processedChildren = isRoot && newChildren
+      ? [...newChildren, { 
+            name: looseFilesId,
+            path: looseFilesId,
+            size: 0,
+            children: newChildren.filter((d) => !d.children?.length),
+        }]
+      : newChildren; 
+
+    // Create the extended child object (immutable)
+    const extendedChild: ExtendedFileType = {
+      ...child,
+      name: newName,
+      path: newPath,
+      label: newName,
+      extension,
+      pathWithoutExtension,
+      size: (extension && ["woff", "woff2", "ttf", "otf", "png", "jpg", "svg"].includes(extension)
+          ? 100
+          : Math.min(
+            15000,
+            hasExtension ? child.size : Math.min(child.size, 9000),
+          )) + i,
+      value: (extension && ["woff", "woff2", "ttf", "otf", "png", "jpg", "svg"].includes(extension)
+          ? 100
+          : Math.min(
+            15000,
+            hasExtension ? child.size : Math.min(child.size, 9000),
+          )) + i,
+      color: "#fff",
+      children: processedChildren,
+    };
+
+    // Calculate color and sortOrder (doesn't mutate extendedChild)
+    const color = getColor(extendedChild);
+    const sortOrder = getSortOrder(extendedChild, cachedOrders, i);
+
+    // Return a new object with calculated values
+    return { ...extendedChild, color, sortOrder }; 
+
+  } catch (error) {
+    console.error(`Error processing child node: ${child.path}`, error);
+    return undefined; 
   }
-  const pathWithoutExtension = path?.split(".").slice(0, -1).join(".");
-  const extension = name?.split(".").slice(-1)[0];
-  const hasExtension = !!fileColors[extension];
-
-  if (isRoot && children) {
-    const looseChildren = children?.filter((d) => !d.children?.length);
-    children = [
-      ...children?.filter((d) => d.children?.length),
-      {
-        name: looseFilesId,
-        path: looseFilesId,
-        size: 0,
-        children: looseChildren,
-      },
-    ];
-  }
-
-  let extendedChild = {
-    ...child,
-    name,
-    path,
-    label: name,
-    extension,
-    pathWithoutExtension,
-
-    size:
-      (["woff", "woff2", "ttf", "otf", "png", "jpg", "svg"].includes(extension)
-        ? 100
-        : Math.min(
-          15000,
-          hasExtension ? child.size : Math.min(child.size, 9000),
-        )) + i, // stupid hack to stabilize circle order/position
-    value:
-      (["woff", "woff2", "ttf", "otf", "png", "jpg", "svg"].includes(extension)
-        ? 100
-        : Math.min(
-          15000,
-          hasExtension ? child.size : Math.min(child.size, 9000),
-        )) + i, // stupid hack to stabilize circle order/position
-    color: "#fff",
-    children,
-  } as ExtendedFileType;
-  extendedChild.color = getColor(extendedChild);
-  extendedChild.sortOrder = getSortOrder(extendedChild, cachedOrders, i);
-
-  return extendedChild;
 };
 
 const reflowSiblings = (
