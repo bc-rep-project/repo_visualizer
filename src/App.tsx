@@ -32,7 +32,7 @@ import React from 'react';
 import './App.css';
 import { Tree } from './components/Tree';
 import { FileType } from './components/types';
-import { processDir } from './components/processDir';
+import { processDir } from './utils/process-dir';
 
 function App() {
   const [data, setData] = React.useState<FileType | undefined>(undefined)
