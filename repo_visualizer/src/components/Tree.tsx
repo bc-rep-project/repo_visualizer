@@ -67,7 +67,9 @@
 // export default Tree;
 
 
+// src/components/Tree.tsx
 import React, { useState } from 'react';
+import * as d3 from 'd3';
 
 interface TreeNode {
   name: string;
@@ -76,47 +78,49 @@ interface TreeNode {
   x?: number;
   y?: number;
   children?: TreeNode[];
+  imports?: { importedModule: string, importingFile: string }[];
 }
 
 interface TreeProps {
   data: TreeNode;
-  dependencies: Record<string, string[]>;
 }
 
-const Tree: React.FC<TreeProps> = ({ data, dependencies }) => {
+const Tree: React.FC<TreeProps> = ({ data }) => {
   const [highlighted, setHighlighted] = useState<string | null>(null);
 
   const getCoordinates = (filePath: string): { x: number, y: number } | null => {
-    // Implement this function to return the coordinates of the file node
-    // based on its path. This is crucial for drawing lines correctly.
-    // For now, let's return some mock coordinates.
-    // You should replace this with actual logic to get coordinates.
+    // Placeholder for coordinate logic
     return { x: Math.random() * 1000, y: Math.random() * 1000 };
   };
 
   const renderConnections = () => {
     const lines: JSX.Element[] = [];
-    Object.keys(dependencies).forEach((filePath) => {
-      const imports = dependencies[filePath];
-      imports.forEach((importPath) => {
-        const startPoint = getCoordinates(filePath);
-        const endPoint = getCoordinates(importPath);
-        if (startPoint && endPoint) {
-          lines.push(
-            <line
-              key={`${filePath}-${importPath}`}
-              x1={startPoint.x}
-              y1={startPoint.y}
-              x2={endPoint.x}
-              y2={endPoint.y}
-              stroke="black"
-              strokeWidth="2"
-              className={highlighted === filePath || highlighted === importPath ? 'highlighted' : ''}
-            />
-          );
-        }
-      });
-    });
+    const processConnections = (node: TreeNode) => {
+      if (node.imports) {
+        node.imports.forEach(importObj => {
+          const startPoint = getCoordinates(node.path);
+          const endPoint = getCoordinates(importObj.importedModule);
+          if (startPoint && endPoint) {
+            lines.push(
+              <line
+                key={`${node.path}-${importObj.importedModule}`}
+                x1={startPoint.x}
+                y1={startPoint.y}
+                x2={endPoint.x}
+                y2={endPoint.y}
+                stroke="black"
+                strokeWidth="2"
+                className={highlighted === node.path || highlighted === importObj.importedModule ? 'highlighted' : ''}
+              />
+            );
+          }
+        });
+      }
+      if (node.children) {
+        node.children.forEach(child => processConnections(child));
+      }
+    };
+    processConnections(data);
     return lines;
   };
 

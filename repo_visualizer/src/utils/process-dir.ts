@@ -68,93 +68,78 @@
 // };
 
 
-import fs from "fs";
-import * as nodePath from 'path';
-import { shouldExcludePath } from '../components/should-exclude-path';
+import fs from 'fs';
+import path from 'path';
+import micromatch from 'micromatch';
 
-const importRegex: RegExp = /import\s+(?:[\w{}\s,*]+from\s+)?"'["']/g;
+interface Import {
+  importedModule: string;
+  importingFile: string;
+}
 
-const extractImports = (filePath: string): string[] => {
-  const content: string = fs.readFileSync(filePath, 'utf-8');
-  const imports: string[] = [];
-  let match: RegExpExecArray | null;
-  while ((match = importRegex.exec(content)) !== null) {
-    imports.push(match[1]);
+const extractImports = (fileContents: string): Import[] => {
+  const imports: Import[] = [];
+  const importRegex = /import\s+(.+?)\s+from\s+'"['"]/g;
+  let match;
+  while ((match = importRegex.exec(fileContents)) !== null) {
+    imports.push({
+      importedModule: match[2], // The imported module
+      importingFile: match[1] // The file doing the importing
+    });
   }
   return imports;
 };
 
-export const processDir = async (rootPath: string = "", excludedPaths: string[] = [], excludedGlobs: string[] = []) => {
-  const foldersToIgnore: string[] = [".git", ...excludedPaths];
-  const fullPathFoldersToIgnore: Set<string> = new Set(foldersToIgnore.map((d: string) =>
-    nodePath.join(rootPath, d)
-  ));
+const shouldExcludePath = (filePath: string, pathsToIgnore: string[], globsToIgnore: string[]): boolean => {
+  const isDirectPathIgnored = pathsToIgnore.includes(filePath);
+  const isGlobPathIgnored = globsToIgnore.some((glob) => micromatch.isMatch(filePath, glob));
+  return isDirectPathIgnored || isGlobPathIgnored;
+};
 
-  const fileDependencies: {[key: string]: string[]} = {};
+interface FileStats {
+  name: string;
+  path: string;
+  size: number;
+  imports: Import[];
+}
 
-  const getFileStats = async (path: string = "") => {
-    const stats: fs.Stats = fs.statSync(`./${path}`);
-    const name: string = path.split("/").filter(Boolean).slice(-1)[0];
-    const size: number = stats.size;
-    const relativePath: string = path.slice(rootPath.length + 1);
-    return {
-      name,
-      path: relativePath,
-      size,
-    };
+const getFileStats = (filePath: string): FileStats => {
+  const stats = fs.statSync(filePath);
+  const name = path.basename(filePath);
+  const size = stats.size;
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const imports = extractImports(content);
+  return {
+    name,
+    path: filePath,
+    size,
+    imports
   };
+};
 
-  const addItemToTree = async (
-    path: string = "",
-    isFolder: boolean = true,
-  ) => {
-    try {
-      console.log("Looking in ", `./${path}`);
+interface TreeItem {
+  name: string;
+  path: string;
+  children?: TreeItem[];
+}
 
-      if (isFolder) {
-        const filesOrFolders: string[] = fs.readdirSync(`./${path}`);
-        const children: any[] = [];
+const addItemToTree = (filePath: string, pathsToIgnore: string[], globsToIgnore: string[]): TreeItem | null => {
+  const stats = fs.statSync(filePath);
+  if (stats.isDirectory()) {
+    const children = fs.readdirSync(filePath).map(child => {
+      const childPath = path.join(filePath, child);
+      return addItemToTree(childPath, pathsToIgnore, globsToIgnore);
+    }).filter(Boolean) as TreeItem[];
+    return { name: path.basename(filePath), path: filePath, children };
+  } else {
+    if (shouldExcludePath(filePath, pathsToIgnore, globsToIgnore)) return null;
+    return getFileStats(filePath);
+  }
+};
 
-        for (const fileOrFolder of filesOrFolders) {
-          const fullPath: string = nodePath.join(path, fileOrFolder);
-          if (shouldExcludePath(fullPath, fullPathFoldersToIgnore, excludedGlobs)) {
-            continue;
-          }
-
-          const info: fs.Stats = fs.statSync(`./${fullPath}`);
-          const stats = await addItemToTree(
-            fullPath,
-            info.isDirectory(),
-          );
-          if (stats) children.push(stats);
-        }
-
-        const stats = await getFileStats(path);
-        return { ...stats, children };
-      }
-
-      if (shouldExcludePath(path, fullPathFoldersToIgnore, excludedGlobs)) {
-        return null;
-      }
-      
-      const stats = getFileStats(path);
-
-      // Extract imports and link them
-      const imports: string[] = extractImports(`./${path}`);
-      fileDependencies[path] = imports;
-
-      return stats;
-
-    } catch (e) {
-      console.log("Issue trying to read file", path, e);
-      return null;
-    }
-  };
-
-  const tree = await addItemToTree(rootPath);
-
-  // Output the file dependencies map
-  console.log("File Dependencies: ", fileDependencies);
-
+const processDir = (rootPath: string, excludedPaths: string[] = [], excludedGlobs: string[] = []): TreeItem | null => {
+  const tree = addItemToTree(rootPath, excludedPaths, excludedGlobs);
   return tree;
 };
+
+export { processDir };

@@ -25,18 +25,26 @@
 
 // export default App;
 
-import React from 'react';
-import Tree from './components/Tree';
+// src/App.tsx
+import React, { useState, useEffect } from 'react';
 import { processDir } from './utils/process-dir';
+import Tree from './components/Tree';
 
 const App: React.FC = () => {
-  const data = processDir(/* parameters */);
-  return (
-    <div className="App">
-      <Tree data={data} />
-      {/* other components */}
-    </div>
-  );
-}
+  const [fileTree, setFileTree] = useState<TreeNode | null>(null);
+
+  useEffect(() => {
+    const rootPath = '/path/to/your/repository';
+    const excludedPaths = ['node_modules', '.git'];
+    const excludedGlobs = ['**/*.test.js'];
+
+    const tree = processDir(rootPath, excludedPaths, excludedGlobs);
+    setFileTree(tree);
+  }, []);
+
+  if (!fileTree) return <div>Loading...</div>;
+
+  return <Tree data={fileTree} />;
+};
 
 export default App;
