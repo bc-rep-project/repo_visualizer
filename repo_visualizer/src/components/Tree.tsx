@@ -68,17 +68,19 @@
 
 
 // src/components/Tree.tsx
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
+// import { ReactNode } from "react";
 
+// Define TreeNode interface here
 interface TreeNode {
   name: string;
   path: string;
   size: number;
-  x?: number;
-  y?: number;
   children?: TreeNode[];
   imports?: { importedModule: string, importingFile: string }[];
+  x?: number;
+  y?: number;
 }
 
 interface TreeProps {
@@ -87,6 +89,39 @@ interface TreeProps {
 
 const Tree: React.FC<TreeProps> = ({ data }) => {
   const [highlighted, setHighlighted] = useState<string | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null); // Add this line
+
+  // const getNodeColor = (nodePath: string) => {
+  //   if (highlighted === nodePath) {
+  //     return 'red'; // Highlighted node
+  //   } else {
+  //     return 'blue'; // Default node color
+  //   }
+  // };
+
+  useEffect(() => {
+    const svg = d3.select(svgRef.current);
+    const width = svg.node()?.getBoundingClientRect().width || 800;
+    const height = svg.node()?.getBoundingClientRect().height || 600;
+
+    // Create a hierarchical data structure from your data
+    const root = d3.hierarchy(data);
+
+    // Create a tree layout
+    const treeLayout = d3.tree<TreeNode>().size([width, height - 100]); 
+
+    // Calculate node positions using D3's tree layout
+    treeLayout(root);
+
+    // Update your nodes' x and y coordinates
+    root.descendants().forEach(node => {
+      // Optional: Adjust x for a left-to-right tree
+      node.data.x = node.x || 0; 
+      node.data.y = node.y || 0;
+    });
+
+    // Rest of your code...
+  }, [data]);
 
   const getCoordinates = (filePath: string): { x: number, y: number } | null => {
     // Placeholder for coordinate logic

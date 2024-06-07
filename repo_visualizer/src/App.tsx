@@ -27,24 +27,31 @@
 
 // src/App.tsx
 import React, { useState, useEffect } from 'react';
-import { processDir } from './utils/process-dir';
+import Legend from './components/Legend';
+import { TreeNode } from './components/types';
 import Tree from './components/Tree';
+import { fetchRepoData } from './components/fetchRepoData'
 
 const App: React.FC = () => {
   const [fileTree, setFileTree] = useState<TreeNode | null>(null);
 
   useEffect(() => {
-    const rootPath = '/path/to/your/repository';
-    const excludedPaths = ['node_modules', '.git'];
-    const excludedGlobs = ['**/*.test.js'];
-
-    const tree = processDir(rootPath, excludedPaths, excludedGlobs);
-    setFileTree(tree);
+    const fetchData = async () => {
+      const data = await fetchRepoData('facebook', 'react');
+      setFileTree(data); 
+    }
+    fetchData();
   }, []);
 
   if (!fileTree) return <div>Loading...</div>;
 
-  return <Tree data={fileTree} />;
+  return (
+    <div>
+      {/* ... (Your other content, like the Tree component) ... */}
+      <Tree data={fileTree} />;
+      <Legend /> {/* Place the Legend component where you want it to appear */}
+    </div>
+  )
 };
 
 export default App;

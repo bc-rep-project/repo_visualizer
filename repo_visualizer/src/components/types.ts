@@ -49,3 +49,13 @@ export type FileType = {
   numberOfLines?: number;
   children?: FileType[];
 };
+
+export interface TreeNode {
+  name: string;
+  path: string;
+  size: number; // 'size' is now required
+  children?: TreeNode[];
+  imports?: { importedModule: string, importingFile: string }[];
+  x?: number;
+  y?: number;
+}
