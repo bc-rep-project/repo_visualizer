@@ -27,7 +27,7 @@
 
 // src/App.tsx
 import React, { useState, useEffect } from 'react';
-import { processLocalRepo } from './processLocalRepo';
+import { processLocalRepo } from './utils/processLocalRepo';
 import { fetchRepoData } from './components/fetchRepoData';
 import ForceGraph from './components/ForceGraph';
 import { TreeNode } from './components/types'; 

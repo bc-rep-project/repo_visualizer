@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { TreeNode } from '../components/types'; 
-import { parseImports } from './parseImports'; // Import the parsing function
+// import { parseImports } from './parseImports'; // Import the parsing function
 
 export const processLocalRepo = async (repoPath: string): Promise<TreeNode | null> => {
   try {

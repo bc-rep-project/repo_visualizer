@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
+import { DragBehavior } from 'd3';
 import { TreeNode } from './types'; // Assuming you have a TreeNode type
 
 interface ForceGraphProps {
@@ -24,10 +25,23 @@ const ForceGraph: React.FC<ForceGraphProps> = ({ data }) => {
     const nodeMap = new Map(data.children.map(node => [node.path, node]));
 
     // Create links array with source and target as node objects
-    const links = data.imports.map(importObj => ({
-      source: nodeMap.get(importObj.importingFile),
-      target: nodeMap.get(importObj.importedModule),
-    })).filter(link => link.source && link.target);
+    // Ensure 'imports' is not undefined 
+    if (!data.imports) return; 
+
+    // Create links array 
+    const links = data.imports
+      .map(importObj => {
+        const sourceNode = nodeMap.get(importObj.importingFile);
+        const targetNode = nodeMap.get(importObj.importedModule);
+
+        // Only create a link if both source and target nodes exist
+        if (sourceNode && targetNode) { 
+          return { source: sourceNode, target: targetNode };
+        } else {
+          return null; // Or handle cases where source/target are not found
+        }
+      })
+      .filter((link): link is { source: TreeNode; target: TreeNode } => link !== null); 
 
     const simulation = d3.forceSimulation(data.children)
       .force('link', d3.forceLink(links).id((d: any) => d.path).strength(0.1)) 
@@ -53,10 +67,12 @@ const ForceGraph: React.FC<ForceGraphProps> = ({ data }) => {
       .on('click', (event, d) => { 
         setSelectedNode(d); 
       })
-      .call(d3.drag()
-        .on('start', dragstarted)
-        .on('drag', dragged)
-        .on('end', dragended));
+      .call(
+        (d3.drag() as DragBehavior<SVGCircleElement, TreeNode, SVGGElement>) 
+          .on('start', dragstarted)
+          .on('drag', dragged)
+          .on('end', dragended)
+      ); 
 
     nodeElements.append('title')
       .text(d => `${d.name} (${d.size} bytes)`);
@@ -92,9 +108,11 @@ const ForceGraph: React.FC<ForceGraphProps> = ({ data }) => {
     }
 
     // Cleanup: Stop the simulation on unmount to prevent memory leaks
-    return () => simulation.stop(); 
-
-  }, [data, selectedNode]); 
+    return () => { 
+      simulation.stop(); 
+    };
+  
+  }, [data, selectedNode]);
 
   return (
     <svg ref={svgRef}></svg>

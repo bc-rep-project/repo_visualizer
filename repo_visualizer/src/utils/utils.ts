@@ -60,7 +60,7 @@
 // };
 
 
-import { TreeNode } from './types';
+import { TreeNode } from '../components/types';
 
 export const extractDependencies = (node: TreeNode): { source: string; target: string }[] => {
   const dependencies: { source: string; target: string }[] = [];
