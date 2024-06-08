@@ -18,7 +18,8 @@ export const fetchRepoData = async (
       path: path,
       size: data.size || 0, // Assuming the API response has a 'size' property
       children: [], // Initialize children array
-      imports: []   // Initialize imports array 
+      imports: [],   // Initialize imports array
+      type: Array.isArray(data) ? 'directory' : 'file', 
     };
 
     // Recursively fetch and process children if it's a directory

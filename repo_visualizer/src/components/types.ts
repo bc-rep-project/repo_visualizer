@@ -54,9 +54,10 @@ export interface TreeNode {
   name: string;
   path: string;
   size: number;
-  type: 'file' | 'directory'; 
+  type: 'file' | 'directory';
   children?: TreeNode[];
-  imports?: { importedModule: string; importingFile: string }[]; 
-  x?: number; 
+  imports?: { importedModule: string; importingFile: string }[];
+  x?: number;
   y?: number;
+  dependencies?: string[]; // Add this to store dependencies
 }
