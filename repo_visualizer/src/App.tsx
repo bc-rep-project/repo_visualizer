@@ -31,17 +31,29 @@ import Legend from './components/Legend';
 import { TreeNode } from './components/types';
 import Tree from './components/Tree';
 import { fetchRepoData } from './components/fetchRepoData'
+import { processLocalRepo } from './utils/processLocalRepo';
 
 const App: React.FC = () => {
   const [fileTree, setFileTree] = useState<TreeNode | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await fetchRepoData('facebook', 'react');
-      setFileTree(data); 
-    }
+      let data: TreeNode | null = null;
+  
+      // Determine data source (from user input or configuration)
+      if (dataSource === 'github') {
+        data = await fetchRepoData('facebook', 'react'); 
+      } else if (dataSource === 'local') {
+        data = await processLocalRepo('/path/to/local/repo');
+      } 
+      // ... (handle other data sources)
+  
+      if (data) {
+        setFileTree(data);
+      }
+    };
     fetchData();
-  }, []);
+  }, [dataSource]); 
 
   if (!fileTree) return <div>Loading...</div>;
 
