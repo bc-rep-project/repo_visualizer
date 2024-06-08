@@ -35,6 +35,7 @@ import { processLocalRepo } from './utils/processLocalRepo';
 
 const App: React.FC = () => {
   const [fileTree, setFileTree] = useState<TreeNode | null>(null);
+  const [dataSource, setDataSource] = useState<string>('github');
 
   useEffect(() => {
     const fetchData = async () => {
