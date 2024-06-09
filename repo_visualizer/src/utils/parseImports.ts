@@ -1,4 +1,9 @@
 import * as babelParser from '@babel/parser'; 
+import type { 
+  ImportDeclaration,
+  Node,
+  Statement
+} from '@babel/types'; 
 import fs from 'fs';
 import { TreeNode } from '../components/types';
 
@@ -12,7 +17,7 @@ export const parseImports = (rootNode: TreeNode): void => {
           plugins: ['typescript'] 
         });
 
-        ast.program.body.forEach(statement => {
+        ast.program.body.forEach((statement: Statement) => {
           if (statement.type === 'ImportDeclaration') {
             const importedModule = statement.source.value;
 
@@ -20,17 +25,17 @@ export const parseImports = (rootNode: TreeNode): void => {
             const importDetails = {
               importedModule,
               importingFile: node.path,
-              defaultImport: '', // Name of the default import (if any)
-              namedImports: [] as string[], // Array of named imports 
-              sideEffectImport: !statement.specifiers.length // True if only side effects are imported
+              defaultImport: '', 
+              namedImports: [] as string[], 
+              sideEffectImport: !statement.specifiers.length 
             };
 
-            statement.specifiers.forEach(specifier => {
+            (statement as ImportDeclaration).specifiers.forEach((specifier: Node) => {
               if (specifier.type === 'ImportDefaultSpecifier') {
                 importDetails.defaultImport = specifier.local.name;
               } else if (specifier.type === 'ImportSpecifier' && specifier.imported.type === 'Identifier') {
                 importDetails.namedImports.push(specifier.imported.name);
-              } 
+              }
             });
 
             node.imports?.push(importDetails);
