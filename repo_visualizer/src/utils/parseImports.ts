@@ -28,7 +28,7 @@ export const parseImports = (rootNode: TreeNode): void => {
             statement.specifiers.forEach(specifier => {
               if (specifier.type === 'ImportDefaultSpecifier') {
                 importDetails.defaultImport = specifier.local.name;
-              } else if (specifier.type === 'ImportSpecifier') {
+              } else if (specifier.type === 'ImportSpecifier' && specifier.imported.type === 'Identifier') {
                 importDetails.namedImports.push(specifier.imported.name);
               } 
             });
