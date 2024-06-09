@@ -1,28 +1,33 @@
-import fs from 'fs';
+import axios from 'axios';
 import path from 'path';
-import { TreeNode } from '../components/types'; 
-// import { parseImports } from './parseImports'; // Import the parsing function
+import { TreeNode } from '../components/types';
 
+// Function to calculate the size of a file and its imports
+const calculateFileSize = async (filePath: string, imports: { importedModule: string; importingFile: string; }[]): Promise<number> => {
+  const response = await axios.post('http://localhost:3001/calculate-file-size', { filePath, imports });
+  return response.data.size;
+};
+
+// Function to calculate the total size of the codebase
+const calculateTotalSize = async (node: TreeNode): Promise<number> => {
+  let totalSize = 0;
+  if (node.type === 'file') {
+    totalSize += await calculateFileSize(node.path, []);
+  } else if (node.children) {
+    for (const child of node.children) {
+      totalSize += await calculateTotalSize(child);
+    }
+  }
+  return totalSize;
+};
+
+// Function to process a local repository
 export const processLocalRepo = async (repoPath: string): Promise<TreeNode | null> => {
   try {
-    // 1. Recursively Read Directory Structure 
-    const readDirectory = (dirPath: string): Promise<TreeNode[]> => {
-      return Promise.all(
-        fs.readdirSync(dirPath).map(async (itemName) => {
-          const itemPath = path.join(dirPath, itemName);
-          const stat = fs.statSync(itemPath);
-
-          const node: TreeNode = {
-            name: itemName,
-            path: itemPath,
-            size: stat.size,
-            type: stat.isDirectory() ? 'directory' : 'file', 
-            children: stat.isDirectory() ? await readDirectory(itemPath) : undefined
-          };
-
-          return node;
-        })
-      );
+    // 1. Recursively Read Directory Structure
+    const readDirectory = async (dirPath: string): Promise<TreeNode[]> => {
+      const response = await axios.post('http://localhost:3001/read-directory', { dirPath });
+      return response.data;
     };
 
     // 2. Create Root Node
@@ -31,14 +36,13 @@ export const processLocalRepo = async (repoPath: string): Promise<TreeNode | nul
       path: repoPath,
       size: 0, // You'll need to calculate this recursively
       type: 'directory',
-      children: await readDirectory(repoPath), 
+      children: await readDirectory(repoPath),
     };
 
-    // 3. Parse Imports (and potentially calculate total size)
-    // ... (Implementation below in step 5)
+    // 3. Parse Imports and Calculate Size
+    rootNode.size = await calculateTotalSize(rootNode);
 
-    return rootNode; 
-
+    return rootNode;
   } catch (error) {
     console.error('Error processing local repository:', error);
     return null;

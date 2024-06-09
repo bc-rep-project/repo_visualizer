@@ -1,10 +1,9 @@
 module.exports = {
-    // ...
-    resolve: {
-      fallback: {
-        "path": require.resolve("path-browserify"),
-        "util": require.resolve("util/"),
-        "fs": false,
-      }
+  // ... other configuration
+  resolve: {
+    fallback: {
+      "fs": false,
+      // "path": false
     }
-  };
+  }
+};

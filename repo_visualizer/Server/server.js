@@ -1,21 +1,45 @@
+// server.js
 const express = require('express');
-const path = require('path'); 
-const { processLocalRepo } = require('./src/utils/processLocalRepo'); // Adjust path as needed
-
+const fs = require('fs');
+const path = require('path');
 const app = express();
-const port = process.env.PORT || 3001;
 
-app.get('/api/repo', async (req, res) => {
+app.use(express.json());
+
+// Endpoint to read a file and parse imports
+app.post('/parse-imports', async (req, res) => {
+  const { filePath } = req.body;
   try {
-    const repoPath = req.query.path; // Get the repo path from the request 
-    const data = await processLocalRepo(repoPath);
-    res.json(data);
+    const fileContents = await fs.promises.readFile(filePath, 'utf8');
+    const importRegex = /import\s+((?:\{[^}]+})|(?:\* as [^}]+)|(?:[^,]+))/g;
+    const imports = fileContents.match(importRegex) || [];
+    const importObjects = imports.map(importStatement => ({
+      importedModule: importStatement,
+      importingFile: filePath,
+    }));
+    res.json(importObjects);
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Failed to process repository' });
+    res.status(500).send(error.message);
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+// Endpoint to calculate file size
+app.post('/calculate-file-size', async (req, res) => {
+  const { filePath, imports } = req.body;
+  try {
+    const fileStats = fs.statSync(filePath);
+    let fileSize = fileStats.size;
+
+    for (const { importedModule } of imports) {
+      const resolvedPath = path.resolve(path.dirname(filePath), importedModule);
+      fileSize += (await fs.promises.stat(resolvedPath)).size;
+    }
+    res.json({ size: fileSize });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+app.listen(3001, () => {
+  console.log('Server is running on http://localhost:3001');
 });
