@@ -34,6 +34,7 @@ import * as d3 from 'd3';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
+  title = 'visualizer-angular-app';
   data: any[] = [];
 
   constructor(private githubApiService: GithubApiService) { }
@@ -46,11 +47,11 @@ export class AppComponent implements OnInit {
   }
 
   visualizeDirectoryData() {
-    const root = processDirectoryData(this.data);
+    const root = d3.hierarchy(processDirectoryData(this.data));
 
     // Create a D3.js tree layout
     const tree = d3.tree().size([500, 800]);
-    const rootNode = tree(root);
+    const rootNode = tree(root as unknown as d3.HierarchyNode<unknown>);
 
     // Create a D3.js selection for the svg element
     const svg = d3.select("#tree-container")
