@@ -58,19 +58,25 @@
 import * as d3 from 'd3';
 import { extractImports } from './extract-imports';
 
-export function processDirectoryData(data: any[]): any {
-  const root = d3.hierarchy({});
+interface DirectoryNode {
+  name: string;
+  imports?: string[];
+  children: DirectoryNode[];
+}
+
+export function processDirectoryData(data: any[]): DirectoryNode {
+  const root: DirectoryNode = { name: '', children: [] };
 
   data.forEach((file) => {
     const fileParts = file.path.split('/');
     const parentPath = fileParts.slice(0, -1).join('/');
     const fileName = fileParts[fileParts.length - 1];
 
-    let parentNode = root;
-    fileParts.forEach((part) => {
-      let child = parentNode.children.find((child: any) => child.data.name === part);
+    let parentNode: DirectoryNode = root;
+    fileParts.forEach((part: string) => {
+      let child = parentNode.children.find((child: DirectoryNode) => child.name === part);
       if (!child) {
-        child = { name: part };
+        child = { name: part, children: [] };
         parentNode.children.push(child);
       }
       parentNode = child;
@@ -78,7 +84,7 @@ export function processDirectoryData(data: any[]): any {
 
     if (file.content) {
       const imports = extractImports(file.content);
-      parentNode.data.imports = imports;
+      parentNode.imports = imports;
     }
   });
 
