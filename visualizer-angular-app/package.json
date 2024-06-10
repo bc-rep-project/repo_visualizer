@@ -29,6 +29,7 @@
     "@angular-devkit/build-angular": "^18.0.3",
     "@angular/cli": "^18.0.3",
     "@angular/compiler-cli": "^18.0.0",
+    "@types/d3": "^7.4.3",
     "@types/jasmine": "~5.1.0",
     "@types/micromatch": "^4.0.7",
     "@types/node": "^20.14.2",

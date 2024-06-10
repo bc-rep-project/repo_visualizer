@@ -26,6 +26,7 @@
 import { Component, OnInit } from '@angular/core';
 import { GithubApiService } from './services/github-api.service';
 import { processDirectoryData } from './components/process-dir';
+import * as d3 from 'd3';
 
 @Component({
   selector: 'app-root',
@@ -46,43 +47,43 @@ export class AppComponent implements OnInit {
 
   visualizeDirectoryData() {
     const root = processDirectoryData(this.data);
-  
+
     // Create a D3.js tree layout
-    const tree = d3.tree().size([height, width]);
-    const root = tree(processDirectoryData(this.data));
-  
+    const tree = d3.tree().size([500, 800]);
+    const rootNode = tree(root);
+
     // Create a D3.js selection for the svg element
     const svg = d3.select("#tree-container")
       .append("svg")
-      .attr("width", width)
-      .attr("height", height);
-  
+      .attr("width", 800)
+      .attr("height", 500);
+
     // Create a D3.js selection for the g element
     const g = svg.append("g");
-  
+
     // Create the nodes
     const node = g.selectAll(".node")
-      .data(root.descendants())
+      .data(rootNode.descendants())
       .enter().append("g")
       .attr("class", "node")
-      .attr("transform", (d) => `translate(${d.y},${d.x})`);
-  
+      .attr("transform", (d: any) => `translate(${d.y},${d.x})`);
+
     node.append("circle")
       .attr("r", 2.5);
-  
+
     node.append("text")
       .attr("dy", 3)
-      .attr("x", (d) => d.children ? -8 : 8)
-      .style("text-anchor", (d) => d.children ? "end" : "start")
-      .text((d) => d.data.name);
-  
+      .attr("x", (d: any) => d.children ? -8 : 8)
+      .style("text-anchor", (d: any) => d.children ? "end" : "start")
+      .text((d: any) => d.data.name);
+
     // Create the links
     const link = g.selectAll(".link")
-      .data(root.links())
+      .data(rootNode.links())
       .enter().append("path")
       .attr("class", "link")
-      .attr("d", d3.linkHorizontal()
-        .x((d) => d.y)
-        .y((d) => d.x));
+      .attr("d", (d: any) => {
+        return `M${d.source.y},${d.source.x} C${d.source.y + d.source.depth * 10},${d.source.x} ${d.target.y - d.target.depth * 10},${d.target.x} ${d.target.y},${d.target.x}`;
+      });
   }
 }
