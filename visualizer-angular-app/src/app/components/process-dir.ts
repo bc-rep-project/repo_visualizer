@@ -99,7 +99,7 @@ export function processDirectoryData(data: any[]): [DirectoryNode, { source: Fil
 
       // Link the file node to its imports
       imports.forEach((importName) => {
-        const importNode = parentNode.children.find((child) => child.name === importName);
+        const importNode = findImportNode(importName, root);
         if (importNode && 'imports' in importNode) {
           importLinks.push({ source: fileNode, target: importNode as FileNode });
         }
@@ -108,4 +108,21 @@ export function processDirectoryData(data: any[]): [DirectoryNode, { source: Fil
   });
 
   return [root, importLinks];
+}
+
+function findImportNode(importName: string, node: DirectoryNode): DirectoryNode | FileNode | undefined {
+  if ('name' in node && node.name === importName) {
+    return node;
+  }
+
+  if ('children' in node) {
+    for (const child of node.children) {
+      const found = findImportNode(importName, child as DirectoryNode);
+      if (found) {
+        return found;
+      }
+    }
+  }
+
+  return undefined;
 }
