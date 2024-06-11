@@ -50,6 +50,15 @@ export class AppComponent implements OnInit {
     const [root, importLinks] = processDirectoryData(this.data);
     const d3Root = d3.hierarchy(root);
 
+    // Create a D3.js selection for the svg element
+    const svg = d3.select("#tree-container")
+      .append("svg")
+      .attr("width", 800)
+      .attr("height", 500);
+
+    // Create a D3.js selection for the g element
+    const g = svg.append("g");
+
     // Create the import links
     const importLink = g.selectAll(".import-link")
       .data(importLinks)
@@ -63,21 +72,12 @@ export class AppComponent implements OnInit {
         const targetX = d.target.y;
         const targetY = d.target.x;
 
-        return `M${sourceX},${sourceY} C${sourceX + source.depth * 10},${sourceY} ${targetX - target.depth * 10},${targetY} ${targetX},${targetY}`;
+        return `M${sourceX},${sourceY} C${sourceX + sourceX * 10},${sourceY} ${targetX - targetX * 10},${targetY} ${targetX},${targetY}`;
       });
 
     // Create a D3.js tree layout
     const tree = d3.tree().size([500, 800]);
     const rootNode = tree(d3Root as unknown as d3.HierarchyNode<unknown>);
-
-    // Create a D3.js selection for the svg element
-    const svg = d3.select("#tree-container")
-      .append("svg")
-      .attr("width", 800)
-      .attr("height", 500);
-
-    // Create a D3.js selection for the g element
-    const g = svg.append("g");
 
     // Create the nodes
     const node = g.selectAll(".node")
