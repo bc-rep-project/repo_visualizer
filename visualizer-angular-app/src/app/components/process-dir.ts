@@ -60,12 +60,19 @@ import { extractImports } from './extract-imports';
 
 interface DirectoryNode {
   name: string;
-  imports?: string[];
-  children: DirectoryNode[];
+  children: (DirectoryNode | FileNode)[];
 }
 
-export function processDirectoryData(data: any[]): DirectoryNode {
+interface FileNode {
+  name: string;
+  imports: string[];
+}
+
+export function processDirectoryData(data: any[]): [DirectoryNode, { source: FileNode, target: FileNode }[]] {
   const root: DirectoryNode = { name: '', children: [] };
+  const childrenMap: { [key: string]: DirectoryNode | FileNode } = { [root.name]: root };
+
+  const importLinks: { source: FileNode, target: FileNode }[] = [];
 
   data.forEach((file) => {
     const fileParts = file.path.split('/');
@@ -74,19 +81,31 @@ export function processDirectoryData(data: any[]): DirectoryNode {
 
     let parentNode: DirectoryNode = root;
     fileParts.forEach((part: string) => {
-      let child = parentNode.children.find((child: DirectoryNode) => child.name === part);
-      if (!child) {
-        child = { name: part, children: [] };
-        parentNode.children.push(child);
+      if (!childrenMap[part]) {
+        const childNode: DirectoryNode = { name: part, children: [] };
+        childrenMap[part] = childNode;
+        parentNode.children.push(childNode);
       }
-      parentNode = child;
+      parentNode = childrenMap[part] as DirectoryNode;
     });
 
     if (file.content) {
       const imports = extractImports(file.content);
-      parentNode.imports = imports;
+      const fileNode: FileNode = {
+        name: fileName,
+        imports,
+      };
+      parentNode.children.push(fileNode);
+
+      // Link the file node to its imports
+      imports.forEach((importName) => {
+        const importNode = parentNode.children.find((child) => child.name === importName);
+        if (importNode && 'imports' in importNode) {
+          importLinks.push({ source: fileNode, target: importNode as FileNode });
+        }
+      });
     }
   });
 
-  return root;
+  return [root, importLinks];
 }

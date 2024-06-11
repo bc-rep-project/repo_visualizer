@@ -47,7 +47,23 @@ export class AppComponent implements OnInit {
   }
 
   visualizeDirectoryData() {
-    const root = d3.hierarchy(processDirectoryData(this.data));
+    const [root, importLinks] = d3.hierarchy(processDirectoryData(this.data));
+
+  // Create the import links
+  const importLink = g.selectAll(".import-link")
+    .data(importLinks)
+    .enter().append("path")
+    .attr("class", "import-link")
+    .style("stroke", "blue") // Customize the color of import links
+    .attr("d", (d: any) => {
+      // Calculate the positions based on the source and target file nodes
+      const sourceX = d.source.y;
+      const sourceY = d.source.x;
+      const targetX = d.target.y;
+      const targetY = d.target.x;
+
+      return `M${sourceX},${sourceY} C${sourceX + source.depth * 10},${sourceY} ${targetX - target.depth * 10},${targetY} ${targetX},${targetY}`;
+    });
 
     // Create a D3.js tree layout
     const tree = d3.tree().size([500, 800]);

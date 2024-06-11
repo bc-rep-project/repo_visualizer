@@ -3,12 +3,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import axios from 'axios';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GithubApiService {
-  private token = 'YOUR_GITHUB_PAT';
+  private token = environment.githubPat;
 
   constructor(private http: HttpClient) { }
 

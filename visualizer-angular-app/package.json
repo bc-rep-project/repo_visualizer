@@ -5,6 +5,9 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "serve": "ng serve --open",
+    "serve:prod": "ng serve --configuration=production",
+    "serve:prod:api": "API_URL=https://your_api_url.com ng serve --configuration=production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
