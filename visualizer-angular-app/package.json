@@ -9,7 +9,10 @@
     "serve:prod": "ng serve --configuration=production",
     "serve:prod:api": "API_URL=https://your_api_url.com ng serve --configuration=production",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "lint": "ng lint",
+    "e2e": "ng e2e",
+    "start-dev": "dotenv -e .env ng serve"
   },
   "private": true,
   "dependencies": {
@@ -38,6 +41,7 @@
     "@types/jasmine": "~5.1.0",
     "@types/micromatch": "^4.0.7",
     "@types/node": "^20.14.2",
+    "dotenv-cli": "^7.4.2",
     "dotenv-webpack": "^8.1.0",
     "jasmine-core": "~5.1.0",
     "karma": "~6.4.0",

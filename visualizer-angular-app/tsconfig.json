@@ -6,7 +6,6 @@
     "outDir": "./dist/out-tsc",
     "typeRoots": ["node_modules/@types"],
     "strict": true,
-    "types": ["node"], 
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
@@ -24,7 +23,8 @@
     "lib": [
       "ES2022",
       "dom"
-    ]
+    ],
+    "types": ["node"]
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
