@@ -38,6 +38,7 @@
     "@types/jasmine": "~5.1.0",
     "@types/micromatch": "^4.0.7",
     "@types/node": "^20.14.2",
+    "dotenv-webpack": "^8.1.0",
     "jasmine-core": "~5.1.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
