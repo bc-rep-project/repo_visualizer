@@ -47,6 +47,13 @@ export class AppComponent implements OnInit {
   fetchRepositoryData() {
     this.githubApiService.getRepositoryFiles(this.owner, this.repo).then((files) => {
       this.data = files;
+      console.log("Raw Data from GitHub:", this.data); // Check raw data structure
+
+      const [root, importLinks] = processDirectoryData(this.data);
+
+      console.log("Processed Root Node:", root);  // Log the processed tree structure
+      console.log("Import Links:", importLinks); // Log the generated import links
+
       this.visualizeDirectoryData();
     });
   }
