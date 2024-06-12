@@ -77,16 +77,16 @@ interface Import {
   importingFile: string;
 }
 
-const extractImports = (fileContents: string): Import[] => {
+const extractImports = (content: string): Import[] => {
+  const importRegex = /import\s+(.+?)\s+from\s+['"](.+?)['"]/g;
   const imports: Import[] = [];
-  const importRegex = /import\s+(.+?)\s+from\s+'"['"]/g;
-  let match;
-  while ((match = importRegex.exec(fileContents)) !== null) {
-    imports.push({
-      importedModule: match[2], // The imported module
-      importingFile: match[1] // The file doing the importing
-    });
+
+  let match: RegExpExecArray | null;
+  while ((match = importRegex.exec(content)) !== null) {
+    const [ , importedModule, modulePath ] = match;
+    imports.push({ importedModule, importingFile: modulePath });
   }
+
   return imports;
 };
 

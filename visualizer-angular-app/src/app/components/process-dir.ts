@@ -71,7 +71,6 @@ interface FileNode {
 export function processDirectoryData(data: any[]): [DirectoryNode, { source: FileNode, target: FileNode }[]] {
   const root: DirectoryNode = { name: '', children: [] };
   const childrenMap: { [key: string]: DirectoryNode | FileNode } = { [root.name]: root };
-
   const importLinks: { source: FileNode, target: FileNode }[] = [];
 
   data.forEach((file) => {
@@ -97,16 +96,17 @@ export function processDirectoryData(data: any[]): [DirectoryNode, { source: Fil
       };
       parentNode.children.push(fileNode);
 
-      // Link the file node to its imports
       imports.forEach((importName) => {
         const importNode = findImportNode(importName, root);
         if (importNode && 'imports' in importNode) {
+          console.log("Generated Import Link:", { source: fileNode, target: importNode as FileNode });
           importLinks.push({ source: fileNode, target: importNode as FileNode });
         }
       });
     }
   });
 
+  console.log("Final Import Links:", importLinks);
   return [root, importLinks];
 }
 

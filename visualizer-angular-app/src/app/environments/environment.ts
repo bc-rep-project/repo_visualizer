@@ -1,10 +1,11 @@
-// export const environment = {
-//   production: false,
-//   githubPat: process.env['GITHUB_PAT'],
-// };
-
-
+// src/environments/environment.ts
 export const environment = {
   production: false,
-  githubPat: '',
+  GITHUB_TOKEN: 'your-github-token'
 };
+
+
+// export const environment = {
+//   production: false,
+//   githubPat: '',
+// };

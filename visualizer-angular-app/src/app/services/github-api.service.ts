@@ -91,6 +91,7 @@
 //-3
 
 import { Injectable } from '@angular/core';
+import { environment } from '../environments/environment';
 
 type File = {
   name: string;
@@ -104,7 +105,7 @@ type File = {
 })
 export class GithubApiService {
   private get token(): string {
-    return process.env['GITHUB_PAT'] || '';
+    return environment.GITHUB_TOKEN;
   }
 
   private cache: { [filePath: string]: string } = {};
