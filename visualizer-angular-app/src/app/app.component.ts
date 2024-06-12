@@ -35,12 +35,17 @@ import * as d3 from 'd3';
 })
 export class AppComponent implements OnInit {
   title = 'visualizer-angular-app';
+  owner: string = '';
+  repo: string = '';
   data: any[] = [];
 
   constructor(private githubApiService: GithubApiService) { }
 
   ngOnInit() {
-    this.githubApiService.getRepositoryFiles('OWNER', 'REPO').then((files) => {
+  }
+
+  fetchRepositoryData() {
+    this.githubApiService.getRepositoryFiles(this.owner, this.repo).then((files) => {
       this.data = files;
       this.visualizeDirectoryData();
     });

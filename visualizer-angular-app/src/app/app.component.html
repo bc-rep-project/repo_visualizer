@@ -1,19 +1,22 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
   <main class="main">
     <h1>Hello, {{ title }}</h1>
     <div id="tree-container"></div>
   </main>
-</html>
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Angular App</title>
-</head>
-<body>
-    <app-root></app-root>
-</body>
 </html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <main class="main">
+    <div>
+      <h1>{{ title }}</h1>
+      <label for="owner">Repository Owner: </label>
+      <input id="owner" [(ngModel)]="owner" placeholder="Repository Owner" required>
+      <label for="repo">Repository Name: </label>
+      <input id="repo" [(ngModel)]="repo" placeholder="Repository Name" required>
+      <button (click)="fetchRepositoryData()">Fetch Repository Data</button>
+    </div>
+    <div id="tree-container"></div>
+  </main>
+</html>
