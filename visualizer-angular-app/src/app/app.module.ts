@@ -40,8 +40,9 @@ import { AppComponent } from './app.component';
 import { FormsModule } from '@angular/forms';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [AppComponent, CodeVisualizerComponent],
   imports: [BrowserModule, HttpClientModule, FormsModule],
+  providers: [ GithubApiService ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

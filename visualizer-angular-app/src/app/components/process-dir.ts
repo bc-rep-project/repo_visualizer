@@ -1,57 +1,3 @@
-// // src/app/components/process-dir.ts
-
-// import * as fs from 'fs';
-// import * as path from 'path';
-// import * as micromatch from 'micromatch';
-
-// export function processDir(rootPath: string, excludedPaths: string[], excludedGlobs: string[]): any {
-//   // Create Ignore Sets
-//   const pathsToIgnore = new Set(excludedPaths);
-//   const globsToIgnore = excludedGlobs;
-
-//   function getFileStats(filePath: string): any {
-//     const stats = fs.statSync(filePath);
-//     const imports = extractImports(fs.readFileSync(filePath, 'utf8'));
-//     return { stats, imports };
-//   }
-
-//   function addItemToTree(filePath: string): any {
-//     const stats = fs.statSync(filePath);
-
-//     if (stats.isDirectory()) {
-//       const children = fs.readdirSync(filePath).map((child) => addItemToTree(path.join(filePath, child)));
-//       return { path: filePath, type: 'directory', children };
-//     } else if (stats.isFile()) {
-//       if (shouldExcludePath(filePath, pathsToIgnore, globsToIgnore)) {
-//         return null;
-//       }
-//       return getFileStats(filePath);
-//     }
-//   }
-
-//   function extractImports(fileContents: string): any[] {
-//     const imports: any[] = [];
-//     const importRegex = /import\s+(.+?)\s+from\s+(['"])(.+?)\2/g;
-//     let match: RegExpExecArray | null;
-//     while ((match = importRegex.exec(fileContents)) !== null) {
-//       imports.push({
-//         importedModule: match[3], // The imported module
-//         importingFile: match[1] // The file doing the importing
-//       });
-//     }
-//     return imports;
-//   }
-
-//   function shouldExcludePath(path: string, pathsToIgnore: Set<string>, globsToIgnore: string[]): boolean {
-//     return (
-//       pathsToIgnore.has(path) ||
-//       globsToIgnore.some((glob) => micromatch.isMatch(path, glob, { dot: true }))
-//     );
-//   }
-
-//   return addItemToTree(rootPath);
-// }
-
 
 // src/app/components/process-dir.ts
 
@@ -67,12 +13,15 @@ interface FileNode {
   name: string;
   imports: string[];
   type: string;
+  x: number;
+  y: number;
 }
 
-export function processDirectoryData(data: any[]): [DirectoryNode, { source: FileNode, target: FileNode }[]] {
+export function processDirectoryData(data: any[]): { root: DirectoryNode, importLinks: { source: FileNode, target: FileNode }[], dependencies: { [key: string]: string[] } } {
   const root: DirectoryNode = { name: '', children: [] };
   const childrenMap: { [key: string]: DirectoryNode | FileNode } = { [root.name]: root };
   const importLinks: { source: FileNode, target: FileNode }[] = [];
+  const dependencies: { [key: string]: string[] } = {};
 
   data.forEach((file) => {
     const fileParts = file.path.split('/');
@@ -89,27 +38,40 @@ export function processDirectoryData(data: any[]): [DirectoryNode, { source: Fil
       parentNode = childrenMap[part] as DirectoryNode;
     });
 
-  if (file.content) {
-    const imports = extractImports(file.content);
-    const fileNode: FileNode = {
-      name: fileName,
-      imports,
-      type: fileExt,
-    };
-    parentNode.children.push(fileNode);
+    if (file.content) {
+      const imports = extractImports(file.content);
+      const fileNode: FileNode = {
+        name: fileName,
+        imports,
+        type: fileExt,
+        x: 0,
+        y: 0,
+      };
+      parentNode.children.push(fileNode);
 
-    imports.forEach((importName) => {
-      const importNode = findImportNode(importName, root);
-      if (importNode && 'imports' in importNode) {
-        console.log("Generated Import Link:", { source: fileNode, target: importNode as FileNode });
-        importLinks.push({ source: fileNode, target: importNode as FileNode });
-      }
-    });
-  }
+      imports.forEach((importName) => {
+        const importNode = findImportNode(importName, root);
+        if (importNode && 'imports' in importNode) {
+          console.log("Generated Import Link:", { source: fileNode, target: importNode as FileNode });
+          importLinks.push({ source: fileNode, target: importNode as FileNode });
+        }
+      });
+
+      dependencies[fileNode.name] = [];
+      imports.forEach((importName) => {
+        if (findImportNode(importName, root)) {
+          dependencies[importName].push(fileNode.name);
+        }
+      });
+
+      fileNode.x = parentNode.children.indexOf(fileNode);
+      fileNode.y = parentNode.children.length - 1;
+    }
   });
 
   console.log("Final Import Links:", importLinks);
-  return [root, importLinks];
+  console.log("Final Dependencies:", dependencies);
+  return { root, importLinks, dependencies };
 }
 
 function findImportNode(importName: string, node: DirectoryNode): DirectoryNode | FileNode | undefined {
