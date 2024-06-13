@@ -55,7 +55,7 @@
 
 // src/app/components/process-dir.ts
 
-import * as d3 from 'd3';
+
 import { extractImports } from './extract-imports';
 
 interface DirectoryNode {
@@ -87,22 +87,22 @@ export function processDirectoryData(data: any[]): [DirectoryNode, { source: Fil
       parentNode = childrenMap[part] as DirectoryNode;
     });
 
-    if (file.content) {
-      const imports = extractImports(file.content);
-      const fileNode: FileNode = {
-        name: fileName,
-        imports,
-      };
-      parentNode.children.push(fileNode);
+  if (file.content) {
+    const imports = extractImports(file.content);
+    const fileNode: FileNode = {
+      name: fileName,
+      imports,
+    };
+    parentNode.children.push(fileNode);
 
-      imports.forEach((importName) => {
-        const importNode = findImportNode(importName, root);
-        if (importNode && 'imports' in importNode) {
-          console.log("Generated Import Link:", { source: fileNode, target: importNode as FileNode });
-          importLinks.push({ source: fileNode, target: importNode as FileNode });
-        }
-      });
-    }
+    imports.forEach((importName) => {
+      const importNode = findImportNode(importName, root);
+      if (importNode && 'imports' in importNode) {
+        console.log("Generated Import Link:", { source: fileNode, target: importNode as FileNode });
+        importLinks.push({ source: fileNode, target: importNode as FileNode });
+      }
+    });
+  }
   });
 
   console.log("Final Import Links:", importLinks);
