@@ -66,6 +66,7 @@ interface DirectoryNode {
 interface FileNode {
   name: string;
   imports: string[];
+  type: string;
 }
 
 export function processDirectoryData(data: any[]): [DirectoryNode, { source: FileNode, target: FileNode }[]] {
@@ -76,6 +77,7 @@ export function processDirectoryData(data: any[]): [DirectoryNode, { source: Fil
   data.forEach((file) => {
     const fileParts = file.path.split('/');
     const fileName = fileParts[fileParts.length - 1];
+    const fileExt = fileName.split('.').pop() || '';
 
     let parentNode: DirectoryNode = root;
     fileParts.forEach((part: string) => {
@@ -92,6 +94,7 @@ export function processDirectoryData(data: any[]): [DirectoryNode, { source: Fil
     const fileNode: FileNode = {
       name: fileName,
       imports,
+      type: fileExt,
     };
     parentNode.children.push(fileNode);
 
