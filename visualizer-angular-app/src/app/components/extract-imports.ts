@@ -15,7 +15,6 @@
   
 //     return imports;
 //   }
-import importedModule from 'modulePath';
 
 
 const extractImports = (content: string): string[] => {
