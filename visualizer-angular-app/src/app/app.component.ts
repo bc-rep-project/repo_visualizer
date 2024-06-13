@@ -70,10 +70,33 @@ export class AppComponent implements OnInit {
 
     // Create a D3.js selection for the g element
     const g = svg.append("g")
-      .attr("transform", "translate(400,250)");
+      .attr("transform", "translate(400, 300)");
+
+    // Create the import links
+    const radialLink = d3.linkRadial()
+    .source((d: any) => {
+      const [x0, y0] = d.source;
+      return [y0 * Math.cos(x0), y0 * Math.sin(x0)];
+    })
+    .target((d: any) => {
+      const [x1, y1] = d.target;
+      return [y1 * Math.cos(x1), y1 * Math.sin(x1)];
+    })
+    .radius(() => 300)
+    .angle((d: any) => d.x);
+  
+  // Create the import links
+  const importLink = g.selectAll(".import-link")
+    .data(importLinks)
+    .enter().append("path")
+    .attr("class", "import-link")
+    .style("stroke", "blue") // Customize the color of import links
+    .attr("d", (d: any) => {
+      return radialLink({ source: d.source, target: d.target });
+    });
 
     // Create a D3.js tree layout
-    const tree = d3.tree().size([360, 200]).separation((a, b) => a.parent === b.parent ? 1 : 2);
+    const tree = d3.tree().size([500, 800]);
     const rootNode = tree(d3Root as unknown as d3.HierarchyNode<unknown>);
 
     // Create the nodes
@@ -81,39 +104,30 @@ export class AppComponent implements OnInit {
       .data(rootNode.descendants())
       .enter().append("g")
       .attr("class", "node")
-      .attr("transform", (d: any) => `rotate(${(d.x * 180 / Math.PI) - 90}) translate(${d.y}, 0)`);
+      .attr("transform", (d: any) => `translate(${d.y * Math.cos(d.x)},${d.y * Math.sin(d.x)})`);
 
     node.append("circle")
       .attr("r", 2.5);
 
     node.append("text")
-      .attr("dy", "0.31em")
-      .attr("x", (d: any) => d.x < Math.PI === !d.children ? 6 : -6)
-      .attr("text-anchor", (d: any) => d.x < Math.PI === !d.children ? "start" : "end")
-      .attr("transform", (d: any) => d.x >= Math.PI ? "rotate(180)" : null)
+      .attr("dy", 3)
+      .attr("x", (d: any) => d.children ? -8 : 8)
+      .style("text-anchor", (d: any) => d.children ? "end" : "start")
       .text((d: any) => d.data.name);
 
-    // Create the import links
-    const link = g.selectAll(".import-link")
-      .data(importLinks)
-      .enter().append("path")
-      .attr("class", "import-link")
-      .style("stroke", "blue") // Customize the color of import links
-      .attr("d", (d: any) => {
-        // Calculate the positions based on the source and target file nodes
-        const sourceX = (d.source.y * Math.cos(d.source.x)) * -1;
-        const sourceY = (d.source.y * Math.sin(d.source.x)) * -1;
-        const targetX = (d.target.y * Math.cos(d.target.x)) * -1;
-        const targetY = (d.target.y * Math.sin(d.target.x)) * -1;
-
-        return `M${sourceX},${sourceY} C${sourceX + sourceX * 10},${sourceY} ${targetX - targetX * 10},${targetY} ${targetX},${targetY}`;
-      });
-
     // Create the links
-    const radialLink = g.selectAll(".link")
+    const link = g.selectAll(".link")
       .data(rootNode.links())
       .enter().append("path")
       .attr("class", "link")
-      .attr("d", d3.linkRadial().angle((d: any) => d.x).radius((d: any) => d.y));
+      .attr("d", (d: any) => {
+        const xArrow = (d.target.x * Math.PI) / 180;
+        const yArrow = (d.target.y * Math.PI) / 180;
+        const xSource = d.source.y * Math.cos(d.source.x);
+        const ySource = d.source.y * Math.sin(d.source.x);
+        const xTarget = d.target.y * Math.cos(d.target.x);
+        const yTarget = d.target.y * Math.sin(d.target.x);
+        return `M${xSource},${ySource} L${xTarget},${yTarget}`;
+      });
   }
 }

@@ -165,3 +165,28 @@
       margin-block: 1.5rem;
     }
   }
+
+  .link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 1.5px;
+  }
+  
+  .node circle {
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+  }
+  
+  /* Example: Style nodes based on file type */
+  .node-ts circle {
+    stroke: blue;
+  }
+  
+  .node-tsx circle {
+    stroke: green; 
+  }
+  
+  .node-js circle {
+    stroke: yellow;
+  }

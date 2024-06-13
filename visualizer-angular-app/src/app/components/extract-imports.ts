@@ -16,7 +16,7 @@
 //     return imports;
 //   }
 
-
+// src/app/components/extract-imports.ts
 const extractImports = (content: string): string[] => {
   const importRegex = /import\s+(.+?)\s+from\s+['"](.+?)['"]/g;
   const imports: string[] = [];
