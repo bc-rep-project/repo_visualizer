@@ -75,7 +75,6 @@ export function processDirectoryData(data: any[]): [DirectoryNode, { source: Fil
 
   data.forEach((file) => {
     const fileParts = file.path.split('/');
-    const parentPath = fileParts.slice(0, -1).join('/');
     const fileName = fileParts[fileParts.length - 1];
 
     let parentNode: DirectoryNode = root;
