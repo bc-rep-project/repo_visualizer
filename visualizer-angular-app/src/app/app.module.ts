@@ -37,15 +37,15 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
-import { AppComponent } from './app.component';
+// import { AppComponent } from './app.component';
 import { FormsModule } from '@angular/forms';
 import { GithubApiService } from './services/github-api.service';
-import { CodeVisualizerComponent } from './components/code-visualizer/code-visualizer.component';
+import { CodeVisualizerComponent } from './app.component';
 
 @NgModule({
-  declarations: [AppComponent, CodeVisualizerComponent],
+  declarations: [CodeVisualizerComponent],
   imports: [BrowserModule, HttpClientModule, FormsModule],
   providers: [ GithubApiService ],
-  bootstrap: [AppComponent]
+  bootstrap: [CodeVisualizerComponent]
 })
 export class AppModule { }
