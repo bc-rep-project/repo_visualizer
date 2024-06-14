@@ -38,6 +38,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app.component';
 import { FormsModule } from '@angular/forms';
+import { GithubApiService } from './services/github-api.service';
+import { CodeVisualizerComponent } from './components/code-visualizer/code-visualizer.component';
 
 @NgModule({
   declarations: [AppComponent, CodeVisualizerComponent],

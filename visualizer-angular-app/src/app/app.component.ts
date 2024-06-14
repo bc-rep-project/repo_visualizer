@@ -1,3 +1,5 @@
+// src/app/app.component.ts
+
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { GithubApiService } from './services/github-api.service';
 import { CodeVisualizerComponent } from './components/code-visualizer/code-visualizer.component';
@@ -13,7 +15,7 @@ export class AppComponent implements OnInit {
   repo: string = '';
   data: any[] = [];
 
-  @ViewChild(CodeVisualizerComponent) codeVisualizer: CodeVisualizerComponent;
+  @ViewChild(CodeVisualizerComponent) codeVisualizer!: CodeVisualizerComponent;
 
   constructor(private githubApiService: GithubApiService) { }
 

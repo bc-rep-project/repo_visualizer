@@ -9,19 +9,28 @@ interface DirectoryNode {
   children: (DirectoryNode | FileNode)[];
 }
 
+interface ImportObject {
+  moduleName: string;
+  modulePath: string;
+}
+
 interface FileNode {
   name: string;
-  imports: string[];
+  imports: ImportObject[];
   type: string;
   x: number;
   y: number;
 }
 
-export function processDirectoryData(data: any[]): { root: DirectoryNode, importLinks: { source: FileNode, target: FileNode }[], dependencies: { [key: string]: string[] } } {
+interface Dependencies {
+  [key: string]: string[];
+}
+
+export function processDirectoryData(data: any[]): { root: DirectoryNode, importLinks: { source: FileNode, target: FileNode }[], dependencies: Dependencies } {
   const root: DirectoryNode = { name: '', children: [] };
   const childrenMap: { [key: string]: DirectoryNode | FileNode } = { [root.name]: root };
   const importLinks: { source: FileNode, target: FileNode }[] = [];
-  const dependencies: { [key: string]: string[] } = {};
+  const dependencies: Dependencies = {};
 
   data.forEach((file) => {
     const fileParts = file.path.split('/');
@@ -39,7 +48,7 @@ export function processDirectoryData(data: any[]): { root: DirectoryNode, import
     });
 
     if (file.content) {
-      const imports = extractImports(file.content);
+      const imports = extractImports(file.content); // The function returns an array of { moduleName: string, modulePath: string }
       const fileNode: FileNode = {
         name: fileName,
         imports,
@@ -50,17 +59,14 @@ export function processDirectoryData(data: any[]): { root: DirectoryNode, import
       parentNode.children.push(fileNode);
 
       imports.forEach((importName) => {
-        const importNode = findImportNode(importName, root);
-        if (importNode && 'imports' in importNode) {
-          console.log("Generated Import Link:", { source: fileNode, target: importNode as FileNode });
-          importLinks.push({ source: fileNode, target: importNode as FileNode });
+        const importNode = findImportNode(importName.moduleName, root);
+        if (importNode) {
+          console.log("Generated Import Link:", { source: fileNode, target: importNode });
+          importLinks.push({ source: fileNode, target: importNode });
         }
-      });
-
-      dependencies[fileNode.name] = [];
-      imports.forEach((importName) => {
-        if (findImportNode(importName, root)) {
-          dependencies[importName].push(fileNode.name);
+        if (findImportNode(importName.moduleName, root)) {
+          dependencies[importNode?.name || ''] = dependencies[importNode?.name || ''] || [];
+          dependencies[importNode?.name || ''].push(fileNode.name);
         }
       });
 
@@ -74,16 +80,16 @@ export function processDirectoryData(data: any[]): { root: DirectoryNode, import
   return { root, importLinks, dependencies };
 }
 
-function findImportNode(importName: string, node: DirectoryNode): DirectoryNode | FileNode | undefined {
-  if ('name' in node && node.name === importName) {
-    return node;
-  }
-
+function findImportNode(importName: string, node: DirectoryNode): FileNode | undefined {
   if ('children' in node) {
     for (const child of node.children) {
-      const found = findImportNode(importName, child as DirectoryNode);
-      if (found) {
-        return found;
+      if ('children' in child) {
+        const found = findImportNode(importName, child as DirectoryNode);
+        if (found) {
+          return found;
+        }
+      } else if ((child as FileNode).name === importName) {
+        return child as FileNode;
       }
     }
   }
