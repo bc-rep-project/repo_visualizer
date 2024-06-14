@@ -1,20 +1,12 @@
-import { OnInit } from '@angular/core';
 import * as d3 from 'd3';
-import { processDirectoryData } from '../process-dir';
-import { extractImports } from '../extract-imports';
-
-@Component({
-    selector: 'app-code-visualizer',
-    templateUrl: './code-visualizer.component.html',
-    styleUrls: ['./code-visualizer.component.css'], // Include the CSS file here
-  })
+import { processDirectoryData } from './components/process-dir';
+import { extractImports } from './components/extract-imports';
 
 export class CodeVisualizerComponent implements OnInit {
     private data: any[] = [];
     private svg: any;
     private nodes: any[] = [];
     private links: any[] = [];
-    private processedData: any;
   
     constructor() { }
   
@@ -122,13 +114,13 @@ export class CodeVisualizerComponent implements OnInit {
   
     private highlightDependencies(node: any): void {
       // Highlight the selected node and its dependencies
-      const dependencies = this.processedData.dependencies[node.name];
+      const dependencies = processedData.dependencies[node.name];
       this.highlightNodes(dependencies);
     }
   
     private resetHighlight(node: any): void {
       // Reset the node and its dependencies highlight
-      const dependencies = this.processedData.dependencies[node.name];
+      const dependencies = processedData.dependencies[node.name];
       this.resetNodes(dependencies);
     }
   
@@ -146,3 +138,4 @@ export class CodeVisualizerComponent implements OnInit {
         .style('fill', (d: any) => this.colorByFileType(d.type));
     }
   }
+  
