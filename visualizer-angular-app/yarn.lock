@@ -1581,6 +1581,11 @@
     "@tufjs/canonical-json" "2.0.0"
     minimatch "^9.0.4"
 
+"@types/angular@^1.8.9":
+  version "1.8.9"
+  resolved "https://registry.npmjs.org/@types/angular/-/angular-1.8.9.tgz"
+  integrity sha512-Z0HukqZkx0fotsV3QO00yqU9NzcQI+tMcrum+8MvfB4ePqCawZctF/gz6QiuII+T1ax+LitNoPx/eICTgnF4sg==
+
 "@types/body-parser@*":
   version "1.19.5"
   resolved "https://registry.npmjs.org/@types/body-parser/-/body-parser-1.19.5.tgz"
@@ -1716,7 +1721,7 @@
   dependencies:
     "@types/geojson" "*"
 
-"@types/d3-hierarchy@*":
+"@types/d3-hierarchy@*", "@types/d3-hierarchy@^3.1.7":
   version "3.1.7"
   resolved "https://registry.npmjs.org/@types/d3-hierarchy/-/d3-hierarchy-3.1.7.tgz"
   integrity sha512-tJFtNoYBtRtkNysX1Xq4sxtjK8YgoWUNpIiUee0/jHGRwqvzYxkq0hGVbbOGSz+JgFxxRu4K8nb3YpG3CMARtg==
@@ -2990,7 +2995,7 @@ d3-geo@3:
   dependencies:
     d3-array "2.5.0 - 3"
 
-d3-hierarchy@3:
+d3-hierarchy@^3.1.2, d3-hierarchy@3:
   version "3.1.2"
   resolved "https://registry.npmjs.org/d3-hierarchy/-/d3-hierarchy-3.1.2.tgz"
   integrity sha512-FX/9frcub54beBdugHjDCdikxThEqjnR93Qt7PvQTOHxyiNCAlvMrHhclk3cD5VeAaq9fxmfRp+CnWw9rEMBuA==
