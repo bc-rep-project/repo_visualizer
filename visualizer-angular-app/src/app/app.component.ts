@@ -58,80 +58,6 @@ export class CodeVisualizerComponent implements OnInit {
     this.drawNodes(root);
   }
 
-  // private restartSimulation(): void {
-  //   this.simulation
-  //     .nodes(this.processedData.nodes)
-  //     .force('charge', d3.forceManyBody().strength(-100))
-  //     .force('center', d3.forceCenter(this.svg.attr('width') / 2, this.svg.attr('height') / 2))
-  //     .force('link', d3.forceLink(this.processedData.links).id((d: any) => d.id));
-
-  //   // Create the links
-  //   const link = this.svg.select('g.links').selectAll('line')
-  //     .data(this.processedData.links, (d: any) => `${d.source.id}-${d.target.id}`);
-
-  //   const linkEnter = link.enter()
-  //     .append('line')
-  //     .style('stroke', '#999')
-  //     .style('stroke-opacity', 0.6)
-  //     .style('stroke-width', 1);
-
-  //   link.merge(linkEnter);
-
-  //   link.exit().remove();
-
-  //   // Create the nodes
-  //   const node = this.svg.select('g.nodes').selectAll('circle')
-  //     .data(this.processedData.nodes, (d: any) => d.id);
-
-  //   const nodeEnter = node.enter()
-  //     .append('circle')
-  //     .attr('r', 5)
-  //     .style('fill', (d: any) => this.colorByFileType(d.type))
-  //     .on('mouseover', (event: any, d: any) => {
-  //       // Highlight the selected node and its dependencies
-  //       this.highlightDependencies(d);
-  //     })
-  //     .on('mouseout', (event: any, d: any) => {
-  //       // Reset the node and its dependencies highlight
-  //       this.resetHighlight(d);
-  //     })
-  //     .call(d3.drag()
-  //       .on('start', (event: any, d: any) => {
-  //         if (!event.active) this.simulation.alphaTarget(0.3).restart();
-  //         d.fx = d.x;
-  //         d.fy = d.y;
-  //       })
-  //       .on('drag', (event: any, d: any) => {
-  //         d.fx = event.x;
-  //         d.fy = event.y;
-  //       })
-  //       .on('end', (event: any, d: any) => {
-  //         if (!event.active) this.simulation.alphaTarget(0);
-  //         d.fx = null;
-  //         d.fy = null;
-  //       }));
-
-  //   node.merge(nodeEnter);
-
-  //   node.exit().remove();
-
-  //   // Add labels to the nodes
-  //   node.append('title').text((d: any) => d.name);
-
-  //   // Update the simulation
-  //   this.simulation.on('tick', () => {
-  //     link.merge(linkEnter)
-  //       .attr('x1', (d: any) => d.source.x)
-  //       .attr('y1', (d: any) => d.source.y)
-  //       .attr('x2', (d: any) => d.target.x)
-  //       .attr('y2', (d: any) => d.target.y);
-
-  //     node.merge(nodeEnter)
-  //       .attr('cx', (d: any) => d.x)
-  //       .attr('cy', (d: any) => d.y);
-  //   });
-  // }
-
   private drawLinks(links: { source: D3Node, target: D3Node }[]): void {
     const radialLink = d3.linkRadial<D3Node, D3Node>()
       .angle(d => d.x)
@@ -154,51 +80,6 @@ export class CodeVisualizerComponent implements OnInit {
       .attr('transform', d => `translate(${d.y * Math.cos(d.x - Math.PI / 2)},${d.y * Math.sin(d.x - Math.PI / 2)})`)
       .attr('r', 5) 
       // ... add other attributes and event listeners as needed
-  }
-
-  // private updateNodesAndLinks(processedData: any): void {
-  //   // Update the nodes and links arrays
-  //   this.nodes = processedData.nodes;
-  //   this.links = processedData.links;
-  // }
-
-  private colorByFileType(type: string): string {
-    // Define the color mapping for different file types
-    const colorMap: { [key: string]: string } = {
-      'ts': '#f06',  // TypeScript files
-      'js': '#ff0',  // JavaScript files
-      'css': '#0af', // CSS files
-      'html': '#00f' // HTML files
-      // Add more file types and colors as needed
-    };
-
-    return colorMap[type] || '#ccc';  // Default color for unknown file types
-  }
-
-  private highlightDependencies(node: any): void {
-    // Highlight the selected node and its dependencies
-    const dependencies = this.processedData.dependencies[node.name];
-    this.highlightNodes(dependencies);
-  }
-
-  private resetHighlight(node: any): void {
-    // Reset the node and its dependencies highlight
-    const dependencies = this.processedData.dependencies[node.name];
-    this.resetNodes(dependencies);
-  }
-
-  private highlightNodes(nodes: string[]): void {
-    // Highlight the specified nodes
-    this.svg.selectAll('circle')
-      .filter((d: any) => nodes.includes(d.name))
-      .style('fill', 'red');
-  }
-
-  private resetNodes(nodes: string[]): void {
-    // Reset the specified nodes to their original color
-    this.svg.selectAll('circle')
-      .filter((d: any) => nodes.includes(d.name))
-      .style('fill', (d: any) => this.colorByFileType(d.type));
   }
 }
 
